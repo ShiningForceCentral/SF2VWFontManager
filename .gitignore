@@ -1,3 +1,10 @@
+*.bak
+nbproject/*
+build/*
+build.xml
+manifest.mf
+/dist/
+
 *.class
 
 # Mobile Tools for Java (J2ME)
