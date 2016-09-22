@@ -341,7 +341,7 @@ public class MainEditor extends javax.swing.JFrame {
                 }
             });
 
-            jLabel3.setText("<html>Select a directory.<br>PNG files must be 2BPP, with a \"characterXX.png\" filename.<br>Base path can end with an optional filename prefix.</html>");
+            jLabel3.setText("<html>Select a directory with \"symbolXX.png\" files.<br>Character width = image width - 3.<br>Base path can end with an optional filename prefix.</html>");
 
             javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
             jPanel9.setLayout(jPanel9Layout);
@@ -602,7 +602,7 @@ public class MainEditor extends javax.swing.JFrame {
                     }
                 });
 
-                jLabel9.setText("<html>Select a target directory.<br>This export will create new PNG files.<br>Base path can end with an optional filename prefix.</html>");
+                jLabel9.setText("<html>Select a target directory to create new \"symbolXX.png\" files.<br>Image width = character width + 3.<br>Base path can end with an optional filename prefix.</html>");
 
                 javax.swing.GroupLayout jPanel14Layout = new javax.swing.GroupLayout(jPanel14);
                 jPanel14.setLayout(jPanel14Layout);

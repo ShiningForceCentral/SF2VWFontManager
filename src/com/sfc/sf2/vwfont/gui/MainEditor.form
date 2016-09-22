@@ -488,7 +488,7 @@
                 </Component>
                 <Component class="javax.swing.JLabel" name="jLabel3">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="&lt;html&gt;Select a directory.&lt;br&gt;PNG files must be 2BPP, with a &quot;characterXX.png&quot; filename.&lt;br&gt;Base path can end with an optional filename prefix.&lt;/html&gt;"/>
+                    <Property name="text" type="java.lang.String" value="&lt;html&gt;Select a directory with &quot;symbolXX.png&quot; files.&lt;br&gt;Character width = image width - 3.&lt;br&gt;Base path can end with an optional filename prefix.&lt;/html&gt;"/>
                   </Properties>
                 </Component>
               </SubComponents>
@@ -877,7 +877,7 @@
                 </Component>
                 <Component class="javax.swing.JLabel" name="jLabel9">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="&lt;html&gt;Select a target directory.&lt;br&gt;This export will create new PNG files.&lt;br&gt;Base path can end with an optional filename prefix.&lt;/html&gt;"/>
+                    <Property name="text" type="java.lang.String" value="&lt;html&gt;Select a target directory to create new &quot;symbolXX.png&quot; files.&lt;br&gt;Image width = character width + 3.&lt;br&gt;Base path can end with an optional filename prefix.&lt;/html&gt;"/>
                   </Properties>
                 </Component>
               </SubComponents>
