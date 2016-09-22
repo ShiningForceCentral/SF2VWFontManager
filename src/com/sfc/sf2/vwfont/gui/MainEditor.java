@@ -106,7 +106,7 @@ public class MainEditor extends javax.swing.JFrame {
         jFileChooser2.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("SF2TextManager");
+        setTitle("SF2VWFontManager");
 
         jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("Console"));
         jPanel7.setToolTipText("");
