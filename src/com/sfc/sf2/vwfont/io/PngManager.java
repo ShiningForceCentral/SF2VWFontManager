@@ -5,17 +5,16 @@
  */
 package com.sfc.sf2.vwfont.io;
 
+import com.sfc.sf2.vwfont.FontSymbol;
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.IndexColorModel;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,77 +26,85 @@ import javax.imageio.ImageIO;
  */
 public class PngManager {
     
-    private static String CHARACTER_FILENAME = "symbolXX.png";
+    private static final String CHARACTER_FILENAME = "symbolXX.png";
     
-    public static byte[][] importPng(String basepath){
+    public static FontSymbol[] importPng(String basepath){
         System.out.println("com.sfc.sf2.vwfont.io.PngManager.importPng() - Importing PNG files ...");
-        byte[][] vwfontChars = new byte[0][];
+        FontSymbol[] symbols = null;
+        List<FontSymbol> symbolsList = new ArrayList();
         try{
-            for(int i=0;i<100;i++){
-                String index = String.format("%02d", i);
-                Path path = Paths.get(basepath + CHARACTER_FILENAME.replace("XX.png", index+".png"));
-                System.out.println("File "+path.toString()+" : ");
-                BufferedImage img = ImageIO.read(path.toFile());
-                byte[] vwfontChar = new byte[32];
-                short width = (short)(img.getWidth() - 3);
-                System.out.println("Width = "+width);
-                vwfontChar[0] = (byte) ((width >> 8) & 0xff);
-                vwfontChar[1] = (byte) (width & 0xff);
-                for(int j=0;j<15;j++){
-                    short row = 0;
-                    for(int k=0;k<width+3;k++){
-                        if(img.getRGB(k, j)==-1){
-                            row = (short)(row | (0x8000 >> k));
+            int count = 0;
+            int index = 0;
+            File directory = new File(basepath);
+            File[] files = directory.listFiles();
+            for (File f : files) { 
+                if (f.getName().startsWith("symbol") && f.getName().endsWith(".png")) {
+                    BufferedImage img = ImageIO.read(f);
+                    if (img.getWidth() < FontSymbol.PIXEL_WIDTH || img.getHeight() < FontSymbol.PIXEL_HEIGHT) {
+                        throw new IOException(String.format("Image dimensions are wrong. Image must be %d x %d", FontSymbol.PIXEL_WIDTH, FontSymbol.PIXEL_HEIGHT));
+                    }
+                    int symbolWidth = 0;
+                    int[][] symbolPixels = new int[FontSymbol.PIXEL_WIDTH][FontSymbol.PIXEL_HEIGHT];
+                    int[] pixels = new int[FontSymbol.PIXEL_WIDTH*FontSymbol.PIXEL_HEIGHT];
+                    WritableRaster raster = img.getRaster();
+                    raster.getPixels(0, 0, FontSymbol.PIXEL_WIDTH, FontSymbol.PIXEL_HEIGHT, pixels);
+                    for (int i = 0; i < pixels.length; i++) {
+                        if (pixels[i] == 2) {   //Width marker
+                            symbolWidth = i%FontSymbol.PIXEL_WIDTH;
+                            symbolPixels[i%FontSymbol.PIXEL_WIDTH][i/FontSymbol.PIXEL_WIDTH] = 0;
+                        } else {
+                            symbolPixels[i%FontSymbol.PIXEL_WIDTH][i/FontSymbol.PIXEL_WIDTH] = pixels[i];
                         }
                     }
-                    System.out.println("\t" + String.format("%016d", Long.parseLong(Integer.toBinaryString(0xFFFF & row))));
-                    vwfontChar[2+j*2] = (byte) ((row >> 8) & 0xff);
-                    vwfontChar[2+j*2+1] = (byte) (row & 0xff);                    
+                    index = count;
+                    String fileNumber = f.getName().replaceAll("[^0-9]", "");
+                    if (fileNumber.length() > 0)
+                        index = Integer.parseInt(fileNumber);
+                    FontSymbol symbol = new FontSymbol();
+                    symbol.setId(index);
+                    symbol.setPixels(symbolPixels);
+                    symbol.setWidth(symbolWidth);
+                    symbolsList.add(symbol);
+                    count++;
                 }
-                vwfontChars = Arrays.copyOf(vwfontChars, vwfontChars.length + 1);
-                vwfontChars[vwfontChars.length-1] = vwfontChar;
             }
+            System.out.println("Loaded Font Symbols : " + symbolsList.size());
+            symbols = new FontSymbol[symbolsList.size()];
+            symbols = symbolsList.toArray(symbols);
         }catch(IOException e){
             System.out.println("No more character files to parse.");
         }catch(Exception e){
              System.err.println("com.sfc.sf2.text.io.DisassemblyManager.parseTextbank() - Error while parsing character data : "+e);
         }        
         System.out.println("com.sfc.sf2.vwfont.io.PngManager.importPng() - PNG files imported.");        
-        return vwfontChars;                
+        return symbols;
     }
     
-    public static void exportPng(byte[][] vwfontChars, String filepath){
+    public static void exportPng(FontSymbol[] symbols, String filepath) {
         try {
             System.out.println("com.sfc.sf2.vwfont.io.PngManager.exportPng() - Exporting PNG files ...");
-            for(int i = 0;i<vwfontChars.length;i++){
-                String index = String.format("%02d", i);
-                System.out.println("Char "+i+" : ");
-                int width = vwfontChars[i][1];
-                System.out.println("Width = "+width);
-                BufferedImage bi = new BufferedImage(width+3,15,BufferedImage.TYPE_BYTE_BINARY);
-                for(int j = 0 ; j<15 ; j++){
-                    ByteBuffer bb = ByteBuffer.allocate(2);
-                    bb.order(ByteOrder.BIG_ENDIAN);
-                    bb.put(vwfontChars[i][2+j*2]);
-                    bb.put(vwfontChars[i][2+j*2+1]);
-                    short shortVal = bb.getShort(0);
-                    System.out.println("\t" + String.format("%016d", Long.parseLong(Integer.toBinaryString(0xFFFF & shortVal))));
-                    for(int k=0;k<width+3;k++){
-                        if(((shortVal<<k)&0x8000)!=0){
-                            bi.setRGB(k, j, 0xFFFFFF);
-                        }
+            for(int s = 0; s<symbols.length; s++){
+                String index = String.format("%03d", s);
+                int width = symbols[s].getWidth();
+                
+                BufferedImage image = new BufferedImage(FontSymbol.PIXEL_WIDTH, FontSymbol.PIXEL_HEIGHT, BufferedImage.TYPE_BYTE_BINARY, symbols[s].getPalette().getIcm());
+                WritableRaster raster = image.getRaster();
+
+                int[] data = new int[FontSymbol.PIXEL_WIDTH*FontSymbol.PIXEL_HEIGHT];
+                int[][] pixels = symbols[s].getPixels();
+                for (int j = 0; j < FontSymbol.PIXEL_HEIGHT; j++) {
+                    for (int i = 0; i < FontSymbol.PIXEL_WIDTH; i++) {
+                        data[i + j*FontSymbol.PIXEL_HEIGHT] = pixels[i][j];
                     }
                 }
+                data[symbols[s].getWidth()] = 2;
+                raster.setPixels(0, 0, FontSymbol.PIXEL_WIDTH, FontSymbol.PIXEL_HEIGHT, data);
                 File outputfile = new File(filepath + System.getProperty("file.separator") + CHARACTER_FILENAME.replace("XX.png", index+".png"));
-                ImageIO.write(bi, "png", outputfile);                
-                System.out.println("");
+                ImageIO.write(image, "png", outputfile);
             }
             System.out.println("com.sfc.sf2.vwfont.io.PngManager.exportPng() - PNG files exported.");
         } catch (Exception ex) {
             Logger.getLogger(PngManager.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-                
     }
-    
 }

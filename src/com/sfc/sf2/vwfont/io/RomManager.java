@@ -5,6 +5,7 @@
  */
 package com.sfc.sf2.vwfont.io;
 
+import com.sfc.sf2.vwfont.FontSymbol;
 import com.sfc.sf2.vwfont.graphics.VWFontDecoder;
 import com.sfc.sf2.vwfont.graphics.VWFontEncoder;
 import java.io.File;
@@ -12,10 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,20 +33,13 @@ public class RomManager {
     private static File romFile;  
     private static byte[] romData;
     
-    public static byte[][] importRom(int romType, String romFilePath){
+    public static FontSymbol[] importRom(int romType, String romFilePath){
         System.out.println("com.sfc.sf2.vwfont.io.RomManager.importRom() - Importing ROM ...");
         RomManager.openFile(romFilePath);
-        byte[][] vwfontChars = RomManager.parseVWFont(romType);        
+        FontSymbol[] symbols = RomManager.parseVWFont(romType);        
         System.out.println("com.sfc.sf2.vwfont.io.RomManager.importRom() - ROM imported.");
-        return vwfontChars;
+        return symbols;
     }
-    
-    public static void exportRom(int romType, byte[][] vwfontChars, String romFilePath){
-        System.out.println("com.sfc.sf2.vwfont.io.RomManager.exportRom() - Exporting ROM ...");
-        RomManager.produceVWFont(vwfontChars);
-        RomManager.writeFile(romType, romFilePath);
-        System.out.println("com.sfc.sf2.vwfont.io.RomManager.exportRom() - ROM exported.");        
-    }    
     
     private static void openFile(String romFilePath){
         try {
@@ -61,27 +52,27 @@ public class RomManager {
         }
     }
     
-    private static byte[][] parseVWFont(int romType){
+    private static FontSymbol[] parseVWFont(int romType){
         System.out.println("com.sfc.sf2.vwfont.io.RomManager.parseVWFont() - Parsing VW Font ...");
         byte[] data = Arrays.copyOfRange(romData,VWFONT_OFFSETS[romType][0],VWFONT_OFFSETS[romType][1]);        
-        byte[][] vwfontChars = VWFontDecoder.parseVWFont(data);
+        FontSymbol[] symbols = VWFontDecoder.parseVWFont(data);
         System.out.println("com.sfc.sf2.vwfont.io.RomManager.parseVWFont() - VW Font parsed.");
-        return vwfontChars;
+        return symbols;
     }
-
-    private static void produceVWFont(byte[][] vwfontChars) {
-        System.out.println("com.sfc.sf2.vwfont.io.DisassemblyManager.produceVWFont() - Producing VW Font ...");
-        VWFontEncoder.produceVWFont(vwfontChars);
-        System.out.println("com.sfc.sf2.vwfont.io.DisassemblyManager.produceVWFont() - VW Font produced.");
-    }    
+    
+    public static void exportRom(int romType, FontSymbol[] symbols, String romFilePath){
+        System.out.println("com.sfc.sf2.vwfont.io.RomManager.exportRom() - Exporting ROM ...");
+        byte[] newVWFontFileBytes = VWFontEncoder.produceVWFont(symbols);
+        RomManager.writeFile(romType, romFilePath, newVWFontFileBytes);
+        System.out.println("com.sfc.sf2.vwfont.io.RomManager.exportRom() - ROM exported.");        
+    }
   
-    private static void writeFile(int romType, String romFilePath){
+    private static void writeFile(int romType, String romFilePath, byte[] newVWFontFileBytes){
         try {
             System.out.println("com.sfc.sf2.vwfont.io.RomManager.writeFile() - Writing file ...");
             romFile = new File(romFilePath);
             Path romPath = Paths.get(romFile.getAbsolutePath());
             romData = Files.readAllBytes(romPath);
-            byte[] newVWFontFileBytes = VWFontEncoder.getNewVWFontFileBytes();
             System.arraycopy(newVWFontFileBytes, 0, romData, VWFONT_OFFSETS[romType][0], newVWFontFileBytes.length);
             Files.write(romPath,romData);
             System.out.println(romData.length + " bytes into " + romFilePath);  

@@ -5,6 +5,7 @@
  */
 package com.sfc.sf2.vwfont.io;
 
+import com.sfc.sf2.vwfont.FontSymbol;
 import com.sfc.sf2.vwfont.graphics.VWFontDecoder;
 import com.sfc.sf2.vwfont.graphics.VWFontEncoder;
 import java.io.IOException;
@@ -21,45 +22,38 @@ import java.util.logging.Logger;
 public class DisassemblyManager {
     
     
-    public static byte[][] importDisassembly(String filePath){
+    public static FontSymbol[] importDisassembly(String filePath){
         System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.importDisassembly() - Importing disassembly ...");
-        byte[][] vwfontChars = DisassemblyManager.parseVWFont(filePath);        
+        FontSymbol[] symbols = DisassemblyManager.parseVWFont(filePath);        
         System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.importDisassembly() - Disassembly imported.");
-        return vwfontChars;
+        return symbols;
     }
     
-    public static void exportDisassembly(byte[][] vwfontChars, String filePath){
-        System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.exportDisassembly() - Exporting disassembly ...");
-        DisassemblyManager.produceVWFont(vwfontChars);
-        DisassemblyManager.writeFiles(filePath);
-        System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.exportDisassembly() - Disassembly exported.");        
-    }    
-    
-    private static byte[][] parseVWFont(String filePath){
+    private static FontSymbol[] parseVWFont(String filePath){
         System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.parseTextbank() - Parsing VW Font ...");
-        byte[][] vwfontChars = null;       
+        FontSymbol[] symbols = null;       
         try{
             Path path = Paths.get(filePath);
             byte[] data = Files.readAllBytes(path);
-            vwfontChars = VWFontDecoder.parseVWFont(data);
+            symbols = VWFontDecoder.parseVWFont(data);
         }catch(Exception e){
              System.err.println("com.sfc.sf2.vwfont.ioDisassemblyManager.parseTextbank() - Error while parsing VW Font data : "+e);
         } 
         System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.parseTextbank() - VW Font parsed.");
-        return vwfontChars;
+        return symbols;
     }
-
-    private static void produceVWFont(byte[][] vwfontChars) {
-        System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.produceTextbanks() - Producing text banks ...");
-        VWFontEncoder.produceVWFont(vwfontChars);
-        System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.produceTextbanks() - Text banks produced.");
-    }    
+    
+    public static void exportDisassembly(FontSymbol[] symbols, String filePath){
+        System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.exportDisassembly() - Exporting disassembly ...");
+        byte[] newVWFontFileBytes = VWFontEncoder.produceVWFont(symbols);
+        DisassemblyManager.writeFiles(filePath, newVWFontFileBytes);
+        System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.exportDisassembly() - Disassembly exported.");        
+    }
   
-    private static void writeFiles(String filePath){
+    private static void writeFiles(String filePath, byte[] newVWFontFileBytes){
         try {
             System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.writeFiles() - Writing file ...");
             Path vwfontFilePath = Paths.get(filePath);
-            byte[] newVWFontFileBytes = VWFontEncoder.getNewVWFontFileBytes();
             Files.write(vwfontFilePath,newVWFontFileBytes);
             System.out.println(newVWFontFileBytes.length + " bytes into " + vwfontFilePath);
             System.out.println("com.sfc.sf2.vwfont.ioDisassemblyManager.writeFiles() - File written.");
